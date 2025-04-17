@@ -1,0 +1,345 @@
+/* Default styles for larger screens (desktop) */
+.container {
+    display: flex;
+    align-items: baseline;
+}
+
+.reminder_title {
+    position: relative;
+    left: 15%;
+    top: -60px;
+    color: darkblue;
+}
+
+.reminders-form {
+    position: relative;
+    bottom: 40px;
+}
+
+.profile {
+    position: absolute;
+    top: 11px;
+    left: 15px;
+}
+
+.special-reminder-title {
+    position: relative;
+    left: 10%;
+    color: darkblue;
+}
+
+.special-reminder-object {
+    position: relative;
+    left: 1px;
+    bottom: 10px;
+}
+
+.reminders-object {
+    position: absolute;
+    right: 52%;
+    top: 70px;
+}
+
+.sent-noti {
+    position: absolute;
+    left: 1300px;
+    top: 8px;
+}
+
+.noti_preference_object {
+    position: absolute;
+    top: 260px;
+}
+
+.profile-title {
+    position: relative;
+    left: 34%;
+    color: darkblue;
+}
+
+.welcome-title {
+    position: relative;
+    left: 15%
+}
+
+.sent-noti-title {
+    position: absolute;
+    left: 40%;
+    color: darkblue;
+    max-width: 60%; /* Set back to 60% to leave room on right edge */
+    word-wrap: break-word; /* Allow long words to break */
+    white-space: normal; /* Allow natural text wrapping */
+}
+.last-sent-info {
+    position: relative;
+    top: 90px;
+}
+
+.choose_schedule {
+    position: relative;
+    top: 60px;
+}
+
+.choose_school {
+    position: relative;
+    top: 60px;
+}
+
+.token {
+    position: relative;
+    top: 20px;
+}
+
+.user-info-title {
+    position: relative;
+    top: 20px;
+}
+
+.email {
+    position: relative;
+    top: 20px;
+}
+
+.phone_number {
+    position: relative;
+    top: 20px;
+}
+
+.tokken-delete {
+    position: absolute;
+}
+
+.settings-title {
+    position: relative;
+    top: 60px;
+}
+
+.settings {
+    position: absolute;
+    top: 450px
+}
+
+.logout {
+    position: absolute;
+    top: 420px;
+}
+
+.vertical-line-1 {
+    width: 4px;
+    height: 100vh;
+    background-color: black;
+    position: fixed;
+    left: 16%;
+    top: 0;
+    z-index: 999;
+}
+
+.vertical-line-2 {
+    width: 4px;
+    height: 100vh;
+    background-color: black;
+    position: fixed;
+    left: 64%;
+    top: 0;
+    z-index: 999;
+}
+
+.horizontal-line-1 {
+    width: 16%;
+    height: 4px;
+    background-color: black;
+    margin: 140px 0;
+    margin-right: auto;
+    margin-left: 0;
+}
+  
+.horizontal-line-2 {
+    width: 16%;
+    height: 4px;
+    background-color: black;
+    margin: 375px 0;
+    margin-right: auto;
+    margin-left: 0;
+}
+
+button {
+    padding: 10px 15px;
+    border-radius: 5px;
+    border: none;
+    background-color: lightblue;
+    color: black;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #4A90E2;
+}
+
+label {
+    cursor: pointer;
+    font-size: 16px;
+    color: #4A90E2;
+}
+
+/* Media query for tablet or medium screens (max-width: 1024px) */
+@media (max-width: 1024px) {
+    /* Only override what's necessary for tablets, keeping everything else consistent with desktop */
+    .sent-noti {
+        left: 75%;
+    }
+    
+    .sent-noti-title {
+        left: 40%;
+    }
+    
+    .vertical-line-1 {
+        left: 16%;
+    }
+
+    .vertical-line-2 {
+        left: 64%;
+    }
+    
+    /* All other elements retain desktop positioning */
+}
+
+/* Media query for small screens (mobile) (max-width: 600px) */
+@media (max-width: 600px) {
+    /* Core layout changes for mobile */
+    .container {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 0 15px;
+    }
+
+    /* Titles */
+    .reminder_title, .special-reminder-title, .welcome-title {
+        position: relative;
+        left: 10%;
+        top: 10px;
+        margin-bottom: 20px;
+    }
+    
+    .profile-title {
+        position: relative;
+        left: 10%;
+        margin-top: 30px;
+    }
+    
+    .sent-noti-title {
+        position: relative;
+        left: 10%;
+        top: 10px;
+        max-width: 80%;
+    }
+    
+    /* Content blocks */
+    .reminders-object {
+        position: relative;
+        right: auto;
+        left: 5%;
+        top: 20px;
+        margin-bottom: 40px;
+    }
+    
+    .special-reminder-object {
+        position: relative;
+        left: 5%;
+        top: 10px;
+        margin-bottom: 40px;
+    }
+
+    .sent-noti {
+        position: relative;
+        left: 5%;
+        top: 30px;
+        margin-bottom: 40px;
+    }
+    
+    .last-sent-info {
+        position: relative;
+        top: 40px;
+        left: 5%;
+        margin-bottom: 30px;
+    }
+
+    .noti_preference_object {
+        position: relative;
+        top: 50px;
+        left: 5%;
+        margin-bottom: 40px;
+    }
+    
+    /* Profile, settings and controls */
+    .profile {
+        position: relative;
+        top: 10px;
+        left: 5px;
+        margin-bottom: 20px;
+    }
+    
+    .settings {
+        position: relative;
+        top: 60px;
+        left: 5%;
+        margin-bottom: 20px;
+    }
+
+    .logout {
+        position: relative;
+        top: 70px;
+        left: 5%;
+        margin-bottom: 60px;
+    }
+    
+    /* User info section */
+    .user-info-title, .email, .phone_number, .token {
+        position: relative;
+        top: 10px;
+        margin-bottom: 15px;
+    }
+    
+    .choose_schedule, .choose_school {
+        position: relative;
+        top: 20px;
+        margin-bottom: 15px;
+    }
+
+    /* Remove dividing lines that don't work well on mobile */
+    .vertical-line-1, .vertical-line-2 {
+        display: none;
+    }
+
+    /* Adjust horizontal lines to provide section separation */
+    .horizontal-line-1 {
+        width: 90%;
+        margin: 50px auto 30px auto;
+    }
+    
+    .horizontal-line-2 {
+        width: 90%;
+        margin: 30px auto;
+    }
+
+    /* Optimize buttons for touch */
+    button {
+        padding: 12px 18px;
+        margin: 8px 0;
+        font-size: 16px;
+    }
+
+    /* Prevent scrolling issues */
+    html, body {
+        overflow-x: hidden;
+        width: 100%;
+        max-width: 100%;
+    }
+}
+
+html, body {
+    background-color: lightgrey;
+    color: black;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+}

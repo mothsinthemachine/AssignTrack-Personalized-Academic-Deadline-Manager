@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block head %}
+{% endblock %}
+
+{% block body %}
+<h1 class="tittle">Reminders</h1>
+<form method="GET" action="/login">
+    <button name="login" class='login_button'>Login</button>
+</form>
+
+<form method="POST" action="/create_account">
+    <button class="create_account">Create Account</button>
+</form>
+{% endblock %}

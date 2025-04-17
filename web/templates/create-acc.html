@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block head %}
+{% endblock %}
+
+{% block body %}
+<form action="/process_create_account" method="POST" >
+    <h1>Account Creation</h1>
+    <div class="user_creation">
+        {% if error %}
+            <p2>{{ error }}</p2>
+        {% endif %}
+        <p>Username</p>
+        <input name="username" class="username" type="text" required>
+        <p>password</p>
+        <input name="password" class="password" type="password" required>
+        <p>Phone number</p>
+        <input name="phone_number" class="phone_number" type="text" required>
+        <p>Email address</p>
+        <input name="email_address" class="email_address" type="text" required>
+        <p>School</p>
+        <select class="school_name" id="school_dropdown", name="schools">
+            <option value="fiu">{{ school_names[0] }}</option>
+            <option value="mdc">{{ school_names[1] }}</option>
+        </select>
+    </div>
+
+    <button class="creation_submit">Create</button>
+</form>
+{% endblock %}

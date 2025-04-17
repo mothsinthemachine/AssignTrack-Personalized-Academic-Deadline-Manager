@@ -1,0 +1,317 @@
+{% extends 'base.html' %}
+
+{% block head %}
+{% endblock %}
+
+{% block body %}
+    <!--bunch of lines for the style-->
+    <div class="vertical-line-1"></div>
+    <div class="vertical-line-2"></div>
+    <div class="horizontal-line-1"></div>
+    <div class="horizontal-line-2"></div>
+    
+    <div class="container">
+        <div class="profile">
+            <div class="profile-title">
+                <h1>Profile</h1>
+            </div>
+            <div class="welcome-title">
+                <h2>Welcome, {{ user.username }}! </h2>
+            </div>
+            <div class="user-info">
+                <div class="user-info-title">
+                    <h3>User Info:</h3>
+                </div>
+                <!--email object-->
+                <div class="email">
+                    <p>Email:</p>
+                    <form action="/edit_email_redirect" method="POST">
+                        <input type="hidden" name="user_id" value="{{ user.id }}">
+                        <input type="text" placeholder="{{ user.email_address }}" name="new_email_address" required> 
+                        <button type="submit">Edit</button>
+                    </form>
+                </div>
+
+                <!--phone number object-->
+                <div class="phone_number">
+                    <p>Phone Number:</p>
+                    <form action="/edit_phone_number_redirect" method="POST">
+                        <input type="hidden" name="user_id" value="{{ user.id }}">
+                        <input type="text" placeholder="......{{ user.phone_number[-4:] }}" name="new_phone_number" required> 
+                        <button type="submit">Edit</button>
+                    </form>
+                </div>
+                <div class="token">
+                    <p>Token:</p>
+                    {% if has_token %}
+                    <!-- The form to edit the token -->
+                    <div class="edit-form">
+                        <form action="/edit_token_redirect" method="POST">
+                            <!--form information the user wont see-->
+                            <input type="hidden" name="user_id" value="{{ user.id }}">
+                            <input type="hidden" name="school_id" value="{{ user.school_id }}">
+
+                            <!--form information if user wants to edit the token-->
+                            <input type="text" id="editToken" name="editToken" placeholder="{{ has_token[:3] }}...">
+                            <button type="submit">Edit</button>
+
+                        </form>
+                    
+                        <!--Delete button for token-->
+                        <form action="/remove_token_redirect" method="POST">
+                            <input type="hidden" name="user_id" value="{{ user.id }}">
+                            <button class="tokken-delete">Delete</button>
+                        </form>
+                    </div>
+                    {% else %}
+                    <!-- The form to add token -->
+                        <div class="add-form">
+                            <form action="/add_token_redirect" method="POST">
+                                <!--form information the user wont see-->
+                                <input type="hidden" name="user_id" value="{{ user.id }}">
+                                <input type="hidden" name="school_id" value="{{ user.school_id }}">
+
+                                <!--form information so user can add token-->
+                                <input type="text" id="newToken" name="newToken" placeholder="token">
+                                <button type="submit">Add</button>
+                            </form>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="settings">
+                <div class="settings-title">
+                    <h3>Settings:</h3>
+                </div>
+                <!--allow the user to choose their school-->
+                <div class="choose_school">
+                    <form action="/choose_school_redirect" method="POST" >
+                        <input type="hidden" name="user_id" value="{{ user.id }}">
+                        <p>School:</p>
+                            <select class="school_names" id="school_dropdown" name="schools" onchange="this.form.submit()">
+                                <option value="fiu" {% if selected_school == 'fiu' %}selected{% endif %}>{{ school_names[0] }}</option>
+                                <option value="mdc" {% if selected_school == 'mdc' %}selected{% endif %}>{{ school_names[1] }}</option>
+                            </select>  
+                    </form>          
+                </div>
+
+                <!--allow the user to choose their reminder time-->
+                <div class="choose_schedule">
+                    <form action="/choose_schedule_redirect" method="POST" >
+                        <input type="hidden" name="user_id" value="{{ user.id }}">
+                        <p>schedule:</p>
+                        <!--Hours dropdown for reminder schedule-->
+                            <select class="hours" id="hours_dropdown" name="hours" onchange="this.form.submit()">
+                                <option value="01" {% if srs.hours == '01' %}selected{% endif %}>01</option>
+                                <option value="02" {% if srs.hours == '02' %}selected{% endif %}>02</option>
+                                <option value="03" {% if srs.hours == '03' %}selected{% endif %}>03</option>
+                                <option value="04" {% if srs.hours == '04' %}selected{% endif %}>04</option>
+                                <option value="05" {% if srs.hours == '05' %}selected{% endif %}>05</option>
+                                <option value="06" {% if srs.hours == '06' %}selected{% endif %}>06</option>
+                                <option value="07" {% if srs.hours == '07' %}selected{% endif %}>07</option>
+                                <option value="08" {% if srs.hours == '08' %}selected{% endif %}>08</option>
+                                <option value="09" {% if srs.hours == '09' %}selected{% endif %}>09</option>
+                                <option value="10" {% if srs.hours == '10' %}selected{% endif %}>10</option>
+                                <option value="11" {% if srs.hours == '11' %}selected{% endif %}>11</option>
+                                <option value="12" {% if srs.hours == '12' %}selected{% endif %}>12</option>
+                            </select>  
+                        <!--minutes dropdown for reminder schedule-->
+                            <select class="mnutes" id="minutes_dropdown" name="minutes" onchange="this.form.submit()">
+                                <option value="00" {% if srs.minutes == '00' %}selected{% endif %}>00</option>
+                                <option value="05" {% if srs.minutes == '05' %}selected{% endif %}>05</option>
+                                <option value="10" {% if srs.minutes == '10' %}selected{% endif %}>10</option>
+                                <option value="15" {% if srs.minutes == '15' %}selected{% endif %}>15</option>
+                                <option value="20" {% if srs.minutes == '20' %}selected{% endif %}>20</option>
+                                <option value="25" {% if srs.minutes == '25' %}selected{% endif %}>25</option>
+                                <option value="30" {% if srs.minutes == '30' %}selected{% endif %}>30</option>
+                                <option value="35" {% if srs.minutes == '35' %}selected{% endif %}>35</option>
+                                <option value="40" {% if srs.minutes == '40' %}selected{% endif %}>40</option>
+                                <option value="45" {% if srs.minutes == '45' %}selected{% endif %}>45</option>
+                                <option value="50" {% if srs.minutes == '50' %}selected{% endif %}>50</option>
+                                <option value="55" {% if srs.minutes == '55' %}selected{% endif %}>55</option>
+                            </select>  
+                        <!--period dropdown for reminder schedule-->
+                            <select class="period" id="period_dropdown" name="period" onchange="this.form.submit()">
+                                <option value="AM" {% if srs.period == 'AM' %}selected{% endif %}>AM</option>
+                                <option value="PM" {% if srs.period == 'PM' %}selected{% endif %}>PM</option>
+                            </select>
+
+                        <!--timezone dropdown for reminder schedule-->
+                        <select class="timezone" id="timezone_dropdown" name="timezone" onchange="this.form.submit()">
+                            <option value="UTC" {% if srs.timezone == 'UTC' %}selected{% endif %}>UTC</option>
+                            <option value="EDT" {% if srs.timezone == 'EDT' %}selected{% endif %}>EDT</option>
+                            <option value="EST" {% if srs.timezone == 'EST' %}selected{% endif %}>EST</option>
+                            <option value="CDT" {% if srs.timezone == 'CDT' %}selected{% endif %}>CDT</option>
+                            <option value="CST" {% if srs.timezone == 'CST' %}selected{% endif %}>CST</option>
+                            <option value="MDT" {% if srs.timezone == 'MDT' %}selected{% endif %}>MDT</option>
+                            <option value="MST" {% if srs.timezone == 'MST' %}selected{% endif %}>MST</option>
+                            <option value="PDT" {% if srs.timezone == 'PDT' %}selected{% endif %}>PDT</option>
+                            <option value="PST" {% if srs.timezone == 'PST' %}selected{% endif %}>PST</option>
+                            <option value="AKDT" {% if srs.timezone == 'AKDT' %}selected{% endif %}>AKDT</option>
+                            <option value="AKST" {% if srs.timezone == 'AKST' %}selected{% endif %}>AKST</option>
+                            <option value="HST" {% if srs.timezone == 'HST' %}selected{% endif %}>HST</option>
+
+                        </select>
+
+                    </form>          
+                </div>
+
+                <div class="noti_preference_object">
+                    <div class="noti-preference-title">
+                        <p>Notification Preference:</p>
+                    </div>
+                    <form method="POST" action="/noti_preference_redirect" id="notiForm">
+                        <input type="hidden" name="user_id" value="{{ user.id }}">
+                        
+                        <input type="checkbox" id="option1" name="Text" value="1"
+                            {% if noti_preference.phone_preference %}checked{% endif %}
+                            onchange="document.getElementById('notiForm').submit();">
+                        <label for="option1">Text notifications</label><br>  
+                    
+                        <input type="checkbox" id="option2" name="Email" value="1"
+                            {% if noti_preference.email_preference %}checked{% endif %}
+                            onchange="document.getElementById('notiForm').submit();">
+                        <label for="option2">Email notifications</label><br>  
+                    </form>
+                </div>
+                        
+                        
+                </form>
+            </div>    
+
+            <!--Logout button-->
+            <div class="logout">
+                <form action="/logout" method="POST">
+                    <input type="hidden" name="user_id" value="{{ user.id }}">
+                    <button class="logout">Logout</button>
+                </form>
+            </div>
+        </div>
+
+        <!--reminder object-->
+        <div class="reminders-object">
+            <div class="reminder_title">
+                <h1>Reminders</h1>
+            </div>
+            <div class="reminders-form">
+                <!--first reminder html-->
+                {% if check_reminders_dict.first_reminder_key %}
+                    <form action="/edit_reminder_redirect" method="POST">
+                        <input type='hidden' name="reminder_number" value="1">
+                        <input type="hidden" name="user_id" value="{{ user.id }}">
+                        <p>Reminder 1:</p>
+                        <input type="text" name="daysAhead" placeholder="{{ check_reminders_dict['first_reminder_key'] }}" step='1' required>
+                        <button type="submit">Edit</button>
+                    </form>
+
+                    <!--Delete button for reminder-->
+                    <form action="/remove_reminder_redirect" method="POST">
+                        <input type="hidden" name="user_id" value="{{ user.id }}">
+                        <input type="hidden" name="reminder_number" value="1">
+                        <button>Delete</button>
+                    </form>
+                {% else %}
+                        <form action="/add_reminder_redirect" method="POST">
+                            <input type="hidden" name="user_id" value="{{ user.id }}">
+                            <p>Reminder 1:</p>
+                            <input type="text" name="first_reminder" placeholder="Add days ahead">
+                            <button type="submit">Add</button>
+                        </form>
+                {% endif %}
+
+                <!--second reminder html-->
+                {% if check_reminders_dict.second_reminder_key %}
+                    <form action="/edit_reminder_redirect" method="POST">
+                        <input type='hidden' name="reminder_number" value="2">
+                        <input type="hidden" name="user_id" value="{{ user.id }}">
+                        <p>Reminder 2:</p>
+                        <input type="text" name="daysAhead" placeholder="{{ check_reminders_dict['second_reminder_key'] }}" step='1' required>
+                        <button type="submit">Edit</button>
+                    </form>
+
+                    <!--Delete button for reminder-->
+                    <form action="/remove_reminder_redirect" method="POST">
+                        <input type="hidden" name="user_id" value="{{ user.id }}">
+                        <input type="hidden" name="reminder_number" value="2">
+                        <button>Delete</button>
+                    </form>
+                {% else %}
+                    <form action="/add_reminder_redirect" method="POST">
+                        <input type="hidden" name="user_id" value="{{ user.id }}">
+                        <p>Reminder 2:</p>
+                        <input type="text" name="second_reminder" placeholder="Add days ahead">
+                        <button type="submit">Add</button>
+                    </form>
+                {% endif %}
+
+                <!--third reminder html-->
+                {% if check_reminders_dict.third_reminder_key %}
+                    <form action="/edit_reminder_redirect" method="POST">
+                        <input type='hidden' name="reminder_number" value="3">
+                        <input type="hidden" name="user_id" value="{{ user.id }}">
+                        <p>Reminder 1:</p>
+                        <input type="text" name="daysAhead" placeholder="{{ check_reminders_dict['third_reminder_key'] }}" step='1' required>
+                        <button type="submit">Edit</button>
+                    </form>
+
+                    <!--Delete button for reminder-->
+                    <form action="/remove_reminder_redirect" method="POST">
+                        <input type="hidden" name="user_id" value="{{ user.id }}">
+                        <input type="hidden" name="reminder_number" value="3">
+                        <button>Delete</button>
+                    </form>
+                {% else %}
+                    <form action="/add_reminder_redirect" method="POST">
+                        <input type="hidden" name="user_id" value="{{ user.id }}">
+                        <p>Reminder 3:</p>
+                        <input type="text" name="third_reminder" placeholder="Add days ahead">
+                        <button type="submit">Add</button>
+                    </form>
+                {% endif %}
+            </div>        
+            <!--special reminder html-->
+            <div class="special-reminder-object">
+                <div class="special-reminder-title">
+                    <h1>Sp Reminder</h1>
+                </div>
+                {% if check_reminders_dict.special_reminder_key %}
+                    <form action="/edit_reminder_redirect" method="POST">
+                        <input type="hidden" name="user_id" value="{{ user.id }}">
+                        <input type="hidden" name="reminder_number" value="4">
+                        <input type="text" name="daysAhead" placeholder="{{ check_reminders_dict.special_reminder_key }}" step='1' required>
+                        <button type="submit">Edit</button>
+                    </form>
+
+                    <!--Delete button for reminder-->
+                    <form action="/remove_reminder_redirect" method="POST">
+                        <input type="hidden" name="reminder_number" value="4">
+                        <input type="hidden" name="user_id" value="{{ user.id }}">
+                        <button>Delete</button>
+                    </form>
+                {% else %}
+                <form action="/add_reminder_redirect" method="POST">
+                    <input type="hidden" name="user_id" value="{{ user.id }}">
+                    <input type="text" name="special_reminder" placeholder="Add days ahead">
+                    <button type="submit">Add</button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+
+        <!--shows the user sent notification-->
+        <div class="sent-noti">
+            <div class="sent-noti-title">
+                <h1 style="white-space: nowrap;">Last Sent</h1>
+            </div>
+            <div class="last-sent-info">
+                {% if last_sent %}
+                    <p>{{ last_sent | replace('/', '<br>') | safe }}</p>
+                {% else %}
+                    <p>No assignment sent yet</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+
+{% endblock %}
