@@ -14,33 +14,34 @@ def check_notification_preferences(user_id) -> dict:
 
         info=cursor.fetchall()
 
-
-        conn.commit()
-        conn.close()
-
         reminders_status_dict={
             'email_preference':False,
             'phone_preference':False,
         }
-
-        if info[0][0]==1:
-            reminders_status_dict['email_preference']=True
-        if info[0][1]==1:
-            reminders_status_dict['phone_preference']=True
+        if len(info)!=0:
+            if info[0][0]==1:
+                reminders_status_dict['email_preference']=True
+            if info[0][1]==1:
+                reminders_status_dict['phone_preference']=True
 
         return reminders_status_dict
     
     except Exception as e:
-        print(info)
         print(f'Unexpected error occured when checking user stored notification preference {e}')
-
-        return f'Unexpected error occured when checking user stored notification preference {e}'
-
+        return {
+        'email_preference': False,
+        'phone_preference': False
+        }
+        
+    finally:
+        if conn:
+            conn.close()
 def update_notification_preference(email_preference, phone_preference, user_id):
     try:
         from backend.db_conn import connect_to_db
+        import psycopg2
 
-        conn=True
+        conn=None
         if email_preference==True:
             email_preference=1
         else:
@@ -62,11 +63,17 @@ def update_notification_preference(email_preference, phone_preference, user_id):
 
         return 'success'
 
-    except sqlite3.IntegrityError as e:
+    except psycopg2.errors.IntegrityError as e:
+        if conn:
+            conn.rollback()
         if 'notification_preferences.user_id' in str(e):
             return 'Invalid, user have yet have a notifcation preference to edit'
+        # Handle other integrity constraint violations
+        return f'Database integrity error: {e}'
 
     except Exception as e:
+        if conn:
+            conn.rollback()
         return f"Unexpected error occured when editting notification_preferences {e}"
 
     finally:

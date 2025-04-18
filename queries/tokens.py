@@ -2,7 +2,7 @@
 def add_token(user_id, token):
     try:
         from backend.db_conn import connect_to_db
-
+        import psycopg2
 
         conn=connect_to_db()
         cursor=conn.cursor()
@@ -17,11 +17,16 @@ def add_token(user_id, token):
 
         return 'success'
 
-    except sqlite3.IntegrityError as e:
+    except psycopg2.errors.IntegrityError as e:
+        if conn:
+            conn.rollback()
         if 'token.user_id' in str(e):
             return 'Invalid, user already have a token'
-
+        # Handle other integrity constraint violations
+        return f'Database integrity error: {e}'
     except Exception as e:
+        if conn:
+            conn.rollback()
         return f"Unexpected error occured when adding token {e}"
 
     finally:
@@ -32,7 +37,7 @@ def add_token(user_id, token):
 def edit_token(user_id, token):
     try:
         from backend.db_conn import connect_to_db
-
+        import psycopg2
 
         conn=connect_to_db()
         cursor=conn.cursor()
@@ -46,11 +51,16 @@ def edit_token(user_id, token):
 
         return 'success'
 
-    except sqlite3.IntegrityError as e:
+    except psycopg2.errors.IntegrityError as e:
+        if conn:
+            conn.rollback()
         if 'token.user_id' in str(e):
             return 'Invalid, user have yet to add a token to edit'
-
+        # Handle other integrity constraint violations
+        return f'Database integrity error: {e}'
     except Exception as e:
+        if conn:
+            conn.rollback()
         return f"Unexpected error occured when editting token {e}"
 
     finally:
@@ -107,6 +117,8 @@ def rem_token(user_id):
         return 'success'
         
     except Exception as e:
+        if conn:
+            conn.rollback()
         return f"Unexpected error occured when removing token {e}"
 
     finally:

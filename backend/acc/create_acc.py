@@ -1,13 +1,12 @@
 def save_account(username, password, phone_number, email_address, school_name):
-
+    conn = None
     try:
         import datetime as dt
         from backend.db_conn import connect_to_db
-
+        import psycopg2
         
         conn = connect_to_db()
         cursor = conn.cursor()
-
 
         created_date = str(dt.date.today())
 
@@ -28,19 +27,27 @@ def save_account(username, password, phone_number, email_address, school_name):
         conn.commit()
         return 'success'
 
-    except sqlite3.OperationalError as e:
-        print(f'Sqlite Error {e}')
+    except psycopg2.errors.OperationalError as e:
+        if conn:
+            conn.rollback()
+        print(f'PostgreSQL Error: {e}')
         return 'fail'
 
-    except sqlite3.IntegrityError as e:
-        if 'users.username' in str(e):
+    except psycopg2.errors.IntegrityError as e:
+        if conn:
+            conn.rollback()
+        # Check unique constraint violations
+        if 'unique_username' in str(e) or 'users_username_key' in str(e):
             return 'Invalid: username has been taken'
-        if 'users.phone_number' in str(e):
+        if 'unique_phone' in str(e) or 'users_phone_number_key' in str(e):
             return 'Invalid: number has been taken'
-        if 'users.email_address' in str(e):
+        if 'unique_email' in str(e) or 'users_email_address_key' in str(e):
             return 'Invalid: email address has been taken'
         return 'Invalid'
+        
     except Exception as e:
+        if conn:
+            conn.rollback()
         return f'Unexpected Error occurred in save account {e}'
 
     finally:

@@ -65,8 +65,6 @@ add a validation for number and email address
 
 #think about when i should send users their notification, just got an idea of allowing user to decide when they should get the notification
 
-#think about storing passwords in the database as a schema
-
 #add the error for token and school like this Token: please make sure you have the correct school and token
 
 #get someone whos good at css

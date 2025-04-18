@@ -55,18 +55,19 @@ def adjust_last_saved_reminder(users_dic: dict) -> str:
                         details = EXCLUDED.details,
                         date = EXCLUDED.date
                 """, (user_id, details, date))
-                conn.commit()
             else:
                 # Query to delete the users info from the reminder schedule table
                 cursor.execute("""
                     DELETE FROM last_saved_reminder WHERE user_id = %s
                     """, (user_id,))
                 
-                conn.commit()
+        conn.commit()
         
         return 'success'
     
     except Exception as e:
+        if conn:
+            conn.rollback()
         return f"Unexpected error occurred when adjusting last saved reminder: {e}"
     
     finally:

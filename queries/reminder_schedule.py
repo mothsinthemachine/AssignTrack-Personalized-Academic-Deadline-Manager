@@ -22,6 +22,8 @@ def add_or_edit_reminder_schedule(user_id : int, time : str, timezone : str) -> 
         return 'success'
 
     except Exception as e:
+        if conn:
+            conn.rollback()
         return f"Unexpected error occured when adding reminder {e}"
 
     finally:

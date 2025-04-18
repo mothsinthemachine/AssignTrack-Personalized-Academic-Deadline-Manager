@@ -30,6 +30,8 @@ def save_last_sent_noti(user_id, details):
                 conn.commit()
                 return "Success: Updated existing notification"
             except Exception as e:
+                if conn:
+                    conn.rollback()
                 return f"Error updating last_sent_noti: {e}"
 
         else:
@@ -42,6 +44,8 @@ def save_last_sent_noti(user_id, details):
                 conn.commit()
                 return "Success: Added new notification"
             except Exception as e:
+                if conn:
+                    conn.rollback()
                 return f"Error inserting new notification: {e}"
 
     finally:
@@ -63,7 +67,6 @@ def check_last_sent_noti(user_id):
 
         info=cursor.fetchone()
 
-        conn.commit()
         conn.close()
 
         if info is None:

@@ -1,12 +1,12 @@
 #add reminder to the database
 def add_reminder(user_id, days_ahead, reminder_number):
-
     #safeguard so users cant add more then 4 reminders
     if reminder_number not in range(1, 5):
         return 'Invalid reminder_number parameter for add_reminder must be between 1 and 4'
     
     try:
         from backend.db_conn import connect_to_db
+        import psycopg2
 
 
         conn=connect_to_db()
@@ -21,9 +21,17 @@ def add_reminder(user_id, days_ahead, reminder_number):
 
         return 'success'
 
-    except sqlite3.IntegrityError as e:
-        if 'reminders.reminder_number' in str(e):
+    except psycopg2.errors.UniqueViolation as e:
+        conn.rollback()
+        # Handle unique constraint violation
+        if 'reminders_reminder_number_key' in str(e):
             return 'Invalid, you already have a similar reminder'
+
+    #catch other integrity errors
+    except psycopg2.errors.IntegrityError as e:
+        conn.rollback()
+        # Handle other integrity constraint violations
+        return f'Database integrity error: {e}'
 
     except Exception as e:
         return f"Unexpected error occured when adding reminder {e}"
@@ -73,15 +81,17 @@ def check_user_reminders(user_id) -> dict:
 
     except Exception as e:
         raise Exception(f'Unexpected error occured when checking user stored reminders status {e}')
-
+    finally:
+        if conn:
+            conn.close()
 
 #edits reminder for user
 def edit_reminder(user_id, days_ahead, reminder_number):
-    import sqlite3
+    import psycopg2
+    from backend.db_conn import connect_to_db
+
 
     try:
-
-
         conn=connect_to_db()
         cursor=conn.cursor()
 
@@ -94,11 +104,17 @@ def edit_reminder(user_id, days_ahead, reminder_number):
 
         return 'success'
 
-    except sqlite3.IntegrityError as e:
+    except psycopg2.errors.IntegrityError as e:
+        if conn:
+            conn.rollback()
         if 'reminders.user_id' in str(e):
             return 'Invalid, user have yet to add a reminder to edit'
+        # Handle other integrity constraint violations
+        return f'Database integrity error: {e}'
 
     except Exception as e:
+        if conn:
+            conn.rollback()
         return f"Unexpected error occured when editting reminder {e}"
 
     finally:
@@ -128,6 +144,8 @@ def rem_reminder(user_id, reminder_number):
         return 'success'
         
     except Exception as e:
+        if conn:
+            conn.rollback()
         return f"Unexpected error occured when removing reminder {e}"
 
     finally:

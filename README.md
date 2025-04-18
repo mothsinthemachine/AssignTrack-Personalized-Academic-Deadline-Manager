@@ -50,11 +50,11 @@ python web/app.py
 ## Usage
 
 1. Register for an account or log in
-2. Add your courses and assignments with their due dates
+2. Add your canvas token
 3. Configure your notification preferences:
    - How many days before deadlines you want to be notified
    - What time of day you want to receive notifications
-4. Use the filtering system to view assignments due on specific dates
+4. view assignments due on specific dates
 
 ## Future Enhancements
 

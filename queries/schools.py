@@ -16,7 +16,6 @@ def school_name_list() -> list:
     except Exception as e:
         print(f' Unexpected Error Occured in function school_name_list {e}')
 
-
 #edits school for user
 def edit_user_school(user_id, school_name):
     from backend.db_conn import connect_to_db
@@ -50,6 +49,8 @@ def edit_user_school(user_id, school_name):
                 conn.commit()
                 return "Success: Updated existing user school"
             except Exception as e:
+                if conn:
+                    conn.rollback()
                 return f"Error updating user school: {e}"
         else:
             return "Error: Could not find a school with that name"

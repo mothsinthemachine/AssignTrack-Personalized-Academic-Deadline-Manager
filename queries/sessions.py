@@ -62,6 +62,8 @@ def rem_session_from_db(user_id):
         return 'success'
         
     except Exception as e:
+        if conn:
+            conn.rollback()
         return f"Unexpected error occured when removing session {e}"
 
     finally:
