@@ -26,7 +26,7 @@ AssignTrack is a web-based application designed to help students manage their ac
 
 ```bash
 # Clone the repository
-git clone https://github.com/coolfrancy/AssignTrack-Personalized-Academic-Deadline-Manager.git
+git clone https://github.com/coolfrancy/Assighnment_Reminder.git
 
 # Navigate to project directory
 cd AssignTrack
@@ -75,4 +75,4 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 Your Name - francyromelus@gmail.com
 
-Project Link: https://github.com/coolfrancy/AssignTrack-Personalized-Academic-Deadline-Manager.git
+Project Link: https://github.com/coolfrancy/Assighnment_Reminder.git

@@ -1,73 +1,23 @@
 #crazy idea-add a feature to connect to people with similar assighnments
 
-
-
-#get somebody that knows css to adjust css - later
-
-#--add hashing to users tokens when storing info
-
-#make sure before adding number to database it verifies
-
-#add a feature that also send if its less then a specific day time
-
-#fix login option
-
-add reminders to database with pythoon file
-
-if a user already have a token i allow them to edit the token but if the user doesnt have a token i add it
-
-
-
 #make sure when adding tokens they have a value
 #check if password in logs
 
 ##can edit token even when cookie has expired-needs to be fixed
 
-rem
-#tmrw
- add the ability to send email notification
 
-
-#im going to have a main file that runs the upcoming function and check the databases for reminders that need
-to be reminded and maybe thats when i add to the last sent table
-
-
-#temp
-first i would go to the reminders tables iterating over that and
-getting their norification
-
-
-run the upcoming function and check the databases for reminders that need
-to be reminded and maybe thats when i add to the last sent table
-
-create a view thats basically the query to get all the information to run upcoming
-
-Upcoming(school_url, token, days_ahead)
-
-###
-make it so email and phone number notification is automatically added into the notification 
-proferences
-
-maybe addd trigger for when adding a user it also adds preferences
 
 #add the ability for the user to reset password after verification ofc
 
+                      
 
-#make remind also send notification while it does its check
-#give the users the ability to change their phone number
-
-"""make sure days aheadisnt 0 so people dont get false and mess up the system"""
-                                                                                           
-
-#later
-add a validation for number and email address
-#make sure hashing is occuring for tokens and password
-
-#think about when i should send users their notification, just got an idea of allowing user to decide when they should get the notification
-
-#add the error for token and school like this Token: please make sure you have the correct school and token
-
-#get someone whos good at css
+#get someone whos good at css and javascript
 
 #todo
 do chores
+
+#today
+make sure to add an error for token and school
+saving data as hashing
+adjust ferlando and wendy info as hash
+add the error for token and school like this Token: please make sure you have the correct school and token
