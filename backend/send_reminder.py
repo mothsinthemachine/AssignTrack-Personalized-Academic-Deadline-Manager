@@ -74,9 +74,6 @@ def constant_send_reminder():
                     """,(user_id,))
 
                 info=cursor.fetchone()
-                conn.commit()
-                conn.close()
-
 
                 if info is None:
                     continue
@@ -100,7 +97,10 @@ def constant_send_reminder():
                         number_notify(twilio_sid, twilio_token, text_message, phone_number)
             except Exception as e:
                 return f'Unexpected Error Occured on constant send reminder function {e}'
-
+                
+            finally:
+                if conn:
+                    conn.close()
 
 if __name__ == '__main__':                  
     constant_send_reminder()

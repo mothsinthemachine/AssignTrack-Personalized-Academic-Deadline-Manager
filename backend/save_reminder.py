@@ -28,6 +28,10 @@ def constant_save_reminder():
 
         except Exception as e:
             raise Exception(f'Unexpected error occured when trying to access the view named users_schools_tokens_reminders_view {e}')
+            
+        finally:
+            if conn:
+                conn.close()
 
     def constant_save_to_be_reminded():
         from collections import defaultdict
