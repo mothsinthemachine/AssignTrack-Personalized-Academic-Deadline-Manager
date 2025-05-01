@@ -14,22 +14,28 @@ from queries.tokens import add_token, edit_token, check_user_token_status, rem_t
 from queries.reminders import add_reminder, check_user_reminders, edit_reminder, rem_reminder
 from queries.last_sent_noti import check_last_sent_noti
 from queries.notification_preferences import check_notification_preferences, update_notification_preference
-from queries.users import edit_user_email, edit_phone_number
+from queries.users import edit_user_email, edit_phone_number, check_users_existing_info
 from backend.user_input_check import is_valid_email, is_valid_username, is_valid_token, is_valid_phone, is_valid_password
 from queries.sessions import create_session_for_user, get_user_id_from_session, rem_session_from_db
 from queries.reminder_schedule import add_or_edit_reminder_schedule, get_reminder_schedule
 import uuid
 from flask_bcrypt import Bcrypt
+from cryptography.fernet import Fernet
+from backend.verification.verify import send_verification_code, check_verification_code
+from queries.pending_users import unverified_to_verified_user
+
 
 
 load_dotenv()  # Load environment variables from .env file
 
 #check if app is in demo mode
 is_demo_mode = os.environ.get('demo_mode', 'false').lower() in ('true', '1', 'yes')
-
+token_encryption_key=os.getenv('token_encryption_key')
+fernet=Fernet(token_encryption_key)
+app_secret_key=os.getenv('app_secret_key')
 
 app=Flask(__name__)
-app.secret_key = '4@6daf8#ga1z6a)ySdg1%Av87'
+app.secret_key = app_secret_key
 app.permanent_session_lifetime = timedelta(minutes=300)
 bcrypt = Bcrypt(app)
 
@@ -42,9 +48,11 @@ def login():
     if request.method == "GET":
         return render_template('login.html')
 
+    session.clear() #clears sessions before loging in
     username=request.form.get('username').strip().lower()
     password=request.form.get('password')
     user = get_user_from_db(username, password)
+    unverified_user=get_user_from_db(username, password, verified=False)
 
     #stores information into cookie and session
     if user:
@@ -52,25 +60,48 @@ def login():
         create_session_for_user(user['id'], session_id, expiry_time=300)#stores session in database
         session['session_id'] = session_id
         return redirect(url_for('profile'))
+    
+    elif unverified_user:
+        # Create a pending session
+        pending_session_id = str(uuid.uuid4())
+        user_id=unverified_user['id']
+        create_session_for_user(user_id=user_id, session_id=pending_session_id, expiry_time=1800, verified=False)  # 30 minutes
+        session['pending_session_id'] = pending_session_id
+        session['is_pending'] = True
+
+        user=get_user_from_db_by_id(user_id, verified=False)
+        email=user['email_address']
+        # Redirect to verification page
+        return render_template('acc_creation_verify.html', email=email)
 
     else:
-        return 'Invalid user', 401
+        return redirect(url_for('login'))
 
 @app.route('/profile')
 def profile():
     cookie=session.get('session_id')
     user_id=get_user_id_from_session(cookie)
     if cookie and user_id:
+        invalid_token=request.args.get('invalid_token')
+        invalid_phone_number=request.args.get('invalid_phone_number')
+        invalid_email=request.args.get('invalid_email')
         user=get_user_from_db_by_id(user_id)
         selected_reminder_schedule = get_reminder_schedule(user['id'])
         #work with later
         school_names=school_name_list()
         selected_school=get_user_school_name(user['school_id'])
-        has_token=check_user_token_status(user['id'])
+        has_token_encrypted=check_user_token_status(user['id'])
+
+        if has_token_encrypted:
+            has_token=fernet.decrypt(has_token_encrypted.encode()).decode()
+        else:
+            has_token=False
+
+
         check_reminders_dict=check_user_reminders(user['id'])
         last_sent=check_last_sent_noti(user['id'])
         noti_preference=check_notification_preferences(user['id'])
-        return render_template('profile.html', user=user, has_token=has_token, check_reminders_dict=check_reminders_dict, last_sent=last_sent, noti_preference=noti_preference, school_names=school_names, selected_school=selected_school, srs=selected_reminder_schedule)
+        return render_template('profile.html', user=user, has_token=has_token, check_reminders_dict=check_reminders_dict, last_sent=last_sent, noti_preference=noti_preference, school_names=school_names, selected_school=selected_school, srs=selected_reminder_schedule, invalid_token=invalid_token, invalid_phone_number=invalid_phone_number, invalid_email=invalid_email)
         
     return redirect(url_for('home'))
 
@@ -95,7 +126,8 @@ def create_account():
 def process_create_account():
     username=request.form.get('username')
     password=request.form.get('password')
-    phone_number=request.form.get('phone_number')
+    #dont need to add phone number when creating account
+    phone_number=None
     email_address=request.form.get('email_address')
     school_name=request.form.get('schools')
     
@@ -109,10 +141,6 @@ def process_create_account():
         invalid_username_str = 'Invalid Username: only letters and numbers, with no spaces or special characters'
         return redirect(url_for('create_account', error=invalid_username_str))
 
-    #check if user phone number input is valid
-    if is_valid_phone(phone_number) is False:
-        invalid_phone_str = 'Invalid Phone number: needs to be nine numbers'
-        return redirect(url_for('create_account', error=invalid_phone_str)) 
 
     if is_valid_password(password) is False:
          invalid_password_str = (
@@ -127,19 +155,28 @@ def process_create_account():
     
     # Store hashed_password in database
     hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
-
-
-    #try to add the user to the database
-    db_add_user=save_account(username, hashed_password, phone_number, email_address, school_name)
+    db_add_user=save_account(username, hashed_password, email_address, school_name=school_name)
 
     #show error message for invalid information
     if 'INVALID' in db_add_user.upper():
         return redirect(url_for('create_account', error=db_add_user))
-    return redirect(url_for('home'))
+    #send first verification
+    send_verification_code(email_address, 'email')
+
+    # Create a pending session
+    unverified_user=get_user_from_db(username, password, verified=False)
+    pending_session_id = str(uuid.uuid4())
+    user_id=unverified_user['id']
+    create_session_for_user(user_id=user_id, session_id=pending_session_id, expiry_time=1800, verified=False)  # 30 minutes
+    session['pending_session_id'] = pending_session_id
+    session['is_pending'] = True
+
+    return redirect(url_for('account_creation_verify_page', email=email_address))
 
 @app.route('/edit_token_redirect', methods=['POST'])
 def edit_token_redirect():
-    user_id=request.form.get('user_id')
+    cookie=session.get('session_id')
+    user_id = get_user_id_from_session(cookie)
     new_token=request.form.get('editToken')
     school_id=request.form.get('school_id')
 
@@ -152,9 +189,12 @@ def edit_token_redirect():
     #check if user token input is valid
     if is_valid_token(new_token, school_url) is False:
         invalid_token_str = 'Invalid token or school: make sure the token and school is correct'
-        return redirect(url_for('profile', error=invalid_token_str))
+        return redirect(url_for('profile', invalid_token=invalid_token_str))
 
-    try_edit_token=edit_token(user_id, new_token)
+    #encrypt the token
+    encrypted_new_token=fernet.encrypt(new_token.encode()).decode()
+
+    try_edit_token=edit_token(user_id, encrypted_new_token)
 
     if try_edit_token == 'success':
         return redirect(url_for('profile'))
@@ -166,7 +206,8 @@ def edit_token_redirect():
 
 @app.route('/add_token_redirect', methods=['POST'])
 def add_token_redirect():
-    user_id=request.form.get('user_id')
+    cookie=session.get('session_id')
+    user_id = get_user_id_from_session(cookie)
     new_token=request.form.get('newToken')
     school_id=request.form.get('school_id')
 
@@ -179,15 +220,17 @@ def add_token_redirect():
     #check if user token input is valid
     if is_valid_token(new_token, school_url) is False:
         invalid_token_str = 'Invalid token or school: make sure the token and school is correct'
-        return redirect(url_for('profile', error=invalid_token_str))
-
+        return redirect(url_for('profile', invalid_token=invalid_token_str))
+    
+    encrypted_new_token=fernet.encrypt(new_token.encode()).decode()
     #adds token to the databse if token is correct
-    add_token(user_id, new_token)
+    add_token(user_id, encrypted_new_token)
     return redirect(url_for('profile'))
 
 @app.route('/add_reminder_redirect', methods=['POST'])
 def add_reminder_redirect():
-    user_id=request.form.get('user_id')
+    cookie=session.get('session_id')
+    user_id = get_user_id_from_session(cookie)
     first_reminder_days=request.form.get('first_reminder')
     second_reminder_days=request.form.get('second_reminder')
     third_reminder_days=request.form.get('third_reminder')
@@ -215,7 +258,8 @@ def add_reminder_redirect():
 
 @app.route('/edit_reminder_redirect', methods=['POST'])
 def edit_reminder_redirect():
-    user_id=request.form.get('user_id')
+    cookie=session.get('session_id')
+    user_id = get_user_id_from_session(cookie)
     days_ahead=request.form.get('daysAhead')
     reminder_number=request.form.get('reminder_number')
 
@@ -237,7 +281,8 @@ def edit_reminder_redirect():
 
 @app.route('/remove_reminder_redirect', methods=['POST'])
 def remove_reminder_redirect():
-    user_id=request.form.get('user_id')
+    cookie=session.get('session_id')
+    user_id = get_user_id_from_session(cookie)
     reminder_number=request.form.get('reminder_number')
     #deletes reminder from database
     rem_reminder(user_id, reminder_number)
@@ -245,14 +290,16 @@ def remove_reminder_redirect():
 
 @app.route('/remove_token_redirect', methods=['POST'])
 def remove_token_redirect():
-    user_id=request.form.get('user_id')
+    cookie=session.get('session_id')
+    user_id = get_user_id_from_session(cookie)
     #deletes token from database
     rem_token(user_id)
     return redirect(url_for('profile'))
 
 @app.route('/noti_preference_redirect', methods=['POST'])
 def noti_preference_redirect():
-    user_id=request.form.get('user_id')
+    cookie=session.get('session_id')
+    user_id = get_user_id_from_session(cookie)
     text_notifications = 'Text' in request.form  
     email_notifications = 'Email' in request.form
 
@@ -261,7 +308,8 @@ def noti_preference_redirect():
 
 @app.route('/edit_email_redirect', methods=['POST'])
 def edit_email_redirect():
-    user_id=request.form.get('user_id')
+    cookie=session.get('session_id')
+    user_id = get_user_id_from_session(cookie)
     new_email_address=request.form.get('new_email_address')
     
     if is_demo_mode:
@@ -269,15 +317,17 @@ def edit_email_redirect():
 
     #check if user email inputs is valid
     if is_valid_email(new_email_address) is False:
-        return redirect(url_for('profile'))
-
+        invalid_email="Invalid email format"
+        return redirect(url_for('profile', invalid_email=invalid_email))
+    
     edit_user_email(user_id, new_email_address)
 
     return redirect(url_for('profile'))
 
 @app.route("/edit_phone_number_redirect", methods=['POST'])
 def edit_phone_number_redirect():
-    user_id=request.form.get('user_id')
+    cookie=session.get('session_id')
+    user_id = get_user_id_from_session(cookie)
     new_phone_number=request.form.get('new_phone_number')
 
     if is_demo_mode:
@@ -285,7 +335,8 @@ def edit_phone_number_redirect():
 
     #check if user phone number input is valid
     if is_valid_phone(new_phone_number) is False:
-        return redirect(url_for('profile')) 
+        invalid_phone_number='Invalid phone number format'
+        return redirect(url_for('profile', invalid_phone_number=invalid_phone_number)) 
 
     edit_phone_number(user_id, new_phone_number)
 
@@ -294,7 +345,8 @@ def edit_phone_number_redirect():
 @app.route('/choose_school_redirect', methods=['POST'])
 def choose_school_redirect():
     school_name=request.form.get('schools')
-    user_id=request.form.get('user_id')
+    cookie=session.get('session_id')
+    user_id = get_user_id_from_session(cookie)
 
     print(edit_user_school(user_id, school_name))
 
@@ -302,7 +354,8 @@ def choose_school_redirect():
 
 @app.route('/choose_schedule_redirect', methods=['POST'])
 def choose_schedule_redirect():
-    user_id=request.form.get('user_id')
+    cookie=session.get('session_id')
+    user_id = get_user_id_from_session(cookie)
     hours=request.form.get('hours')
     minutes=request.form.get('minutes')
     period=request.form.get('period')
@@ -313,5 +366,121 @@ def choose_schedule_redirect():
 
     return redirect(url_for('profile'))
 
+@app.route('/phone_number_edit_page', methods=['POST', 'GET'])
+def phone_number_edit_page():
+    # Initialize these variables to avoid UnboundLocalError
+    phone_number_check = None
+    verify_code = None
+    send_code=None
+
+    new_phone_number=request.form.get('new_phone_number')
+    verify_code=request.form.get('verify_code')
+    send_code=request.form.get('send_code')
+    cookie=session.get('session_id')
+    user_id = get_user_id_from_session(cookie)
+    phone_number_check=new_phone_number
+
+    if request.method=='POST':
+        
+        if new_phone_number is not None:
+            #check if user phone number input is valid
+            if is_valid_phone(new_phone_number) is False:
+                phone_number_check='Invalid: phone number format'
+                return render_template('phone_number_verify.html', phone_number_check=phone_number_check)
+            else:
+                #function that checks if the info is already in the database
+                if check_users_existing_info('phone_number', new_phone_number) == "Valid":
+                    if (send_code is not None and send_code=='True'):
+                        send_verification_code(new_phone_number, 'sms')
+                        return render_template('phone_number_verify.html', phone_number_check=phone_number_check)
+                else:
+                    phone_number_check='Invalid: phone number has already been taken'
+                    return render_template('phone_number_verify.html', phone_number_check=phone_number_check)
+                
+        if verify_code is not None:
+            if check_verification_code(new_phone_number, verify_code, 'sms'):
+                #edit user phone number
+                edit_phone_number(user_id, new_phone_number)
+                return redirect(url_for('profile'))
+            else:
+                return render_template('phone_number_verify.html', phone_number_check=phone_number_check)
+
+
+    return render_template('phone_number_verify.html', phone_number_check=phone_number_check)
+
+    
+@app.route('/email_edit_page', methods=['POST', 'GET'])
+def email_edit_page():
+    # Initialize these variables to avoid UnboundLocalError
+    email_check = None
+    verify_code = None
+    send_code=None
+
+    new_email=request.form.get('new_email')
+    verify_code=request.form.get('verify_code')
+    send_code=request.form.get('send_code')
+    cookie=session.get('session_id')
+    user_id = get_user_id_from_session(cookie)
+    email_check=new_email
+
+    if request.method=='POST':
+        
+        if new_email is not None:
+            #check if user phone number input is valid
+            if is_valid_email(new_email) is False:
+                email_check='Invalid: email format'
+                return render_template('email_verify.html', email_check=email_check, user_id=user_id)
+            else:
+                #function that checks if the info is already in the database
+                if check_users_existing_info('email_address', new_email) == "Valid":
+                    if (send_code is not None and send_code=='True'):
+                        send_verification_code(new_email, 'email')
+                        return render_template('email_verify.html', email_check=email_check, user_id=user_id)
+                else:
+                    email_check='Invalid: Email has already been taken'
+                    return render_template('email_verify.html', email_check=email_check, user_id=user_id)
+                
+        if verify_code is not None:
+            if check_verification_code(new_email, verify_code, 'email'):
+                #edit user email
+                print(user_id)
+                edit_user_email(user_id, new_email)
+                return redirect(url_for('profile'))
+            else:
+                return render_template('email_verify.html', email_check=email_check, user_id=user_id)
+
+
+    return render_template('email_verify.html', email_check=email_check, user_id=user_id)
+
+@app.route('/account_creation_verify_page', methods=['POST', 'GET'])
+def account_creation_verify_page():
+    cookie=session.get('pending_session_id')
+    user_id=get_user_id_from_session(cookie, verified=False)
+    user=get_user_from_db_by_id(user_id, verified=False)
+
+    # Initialize these variables to avoid UnboundLocalError
+    send_code=None
+
+    verify_code=request.form.get('verify_code')
+    send_code=request.form.get('send_code')
+
+    #add part to get email from session
+    email=user['email_address']
+    if (send_code is not None and send_code=='True'):
+        send_verification_code(email, 'email')
+        return render_template('acc_creation_verify.html', email=email)
+
+    if verify_code is not None:
+        if check_verification_code(email, verify_code, 'email'):
+            rem_session_from_db(user_id, verified=False)
+            ##function that transfers unverified user to verified user
+            print(unverified_to_verified_user(user_id))
+            session.clear()
+            return redirect(url_for('login'))
+        else:
+            return render_template('acc_creation_verify.html', email=email)
+    return render_template('acc_creation_verify.html', email=email)
+
+
 if __name__=='__main__':
-    app.run(debug=True, port=5000)
+    app.run(debug=True, port=5001)

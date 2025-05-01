@@ -93,7 +93,7 @@ def constant_send_reminder():
                     #send users their email notification based on their preference
                     if email_preference==1:
                         email_notify(send_email, sendgrid_token, email_address, email_message)
-                    if phone_preference==1:
+                    if (phone_preference==1 and phone_number is not None):
                         number_notify(twilio_sid, twilio_token, text_message, phone_number)
             except Exception as e:
                 return f'Unexpected Error Occured on constant send reminder function {e}'

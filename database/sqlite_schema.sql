@@ -24,6 +24,14 @@ CREATE TABLE 'sessions'(
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
+CREATE TABLE unverified_sessions(
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER,
+    session_id TEXT UNIQUE,
+    expiry TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
 CREATE TABLE reminders(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER,
@@ -32,6 +40,17 @@ CREATE TABLE reminders(
     special INTEGER GENERATED ALWAYS AS (CASE WHEN reminder_number = 4 THEN 1 ELSE 0 END) VIRTUAL, -- Auto-set special flag
     FOREIGN KEY (user_id) REFERENCES users(user_id),
     CONSTRAINT unique_days_user_pair UNIQUE (user_id, reminder_number)
+);
+
+CREATE TABLE pending_users(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT UNIQUE,
+    'password' TEXT,
+    phone_number TEXT UNIQUE,
+    email_address TEXT UNIQUE,
+    school_id INTEGER,
+    created_date TEXT,
+    FOREIGN KEY (school_id) REFERENCES schools(id)
 );
 
 CREATE TABLE tokens(
@@ -46,6 +65,16 @@ CREATE TABLE notification_preferences(
     user_id INTEGER UNIQUE,
     email_preference INTEGER,
     phone_preference INTEGER,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+CREATE TABLE sent_verifications(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER UNIQUE,
+    email INTEGER,
+    sms INTEGER,
+    'email_time_sent' TEXT,
+    'sms_time_sent' TEXT,
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
@@ -95,6 +124,12 @@ CREATE TABLE password_log(
 --Indexes to help speed up commonly querried collumns
 CREATE INDEX school_search 
 ON schools('name', canvas_link, 'address');
+
+CREATE INDEX pending_user_search
+ON pending_users(username, password, phone_number, email_address, created_date);
+
+CREATE INDEX sent_verifications_search
+ON sent_verifications(email, sms, email_time_sent, sms_time_sent)
 
 CREATE INDEX reminder_search
 ON reminders(days_ahead, special);

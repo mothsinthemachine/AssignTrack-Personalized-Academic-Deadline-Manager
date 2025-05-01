@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block head %}
+{% endblock %}
+
+{% block body %}
+    <!--email object-->
+    <div class="email_acc_verification">
+        <!--title for email-->
+        <p>Email:</p>
+            <p>{{ email }}</p>
+            <!--check if user code is valid-->
+            <form action="/account_creation_verify_page" method="POST">
+                <input type="text" placeholder="verification code" name="verify_code" required> 
+                <button type="submit">check</button>
+            </form>
+            <!--send user code again if they want-->
+            <form action="/account_creation_verify_page" method="POST">
+                <input type="hidden" name="send_code" value="True">
+                <button type="submit">send code again</button>
+            </form>
+    </div>
+
+{% endblock %}

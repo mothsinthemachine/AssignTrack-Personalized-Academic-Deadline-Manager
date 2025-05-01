@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block head %}
+{% endblock %}
+
+{% block body %}
+    <!--phone number object-->
+    <div class="phone_number_change">
+        <!--title for phone Number-->
+        <p>Phone Number:</p>
+        {% if phone_number_check is none %}
+            <form action="/phone_number_edit_page" method="POST">
+                <input type="hidden" name="send_code" value="True">
+                <input type="text" placeholder="Enter new number" name="new_phone_number" required> 
+                <button type="submit">change</button>
+            </form>
+        {% elif "Invalid" in phone_number_check %}
+            <!--shows error message if useer puts an incorrect phone number-->
+            <p style="font-size: 0.9em; margin: 0.5em 0;">{{ phone_number_check }}</p>
+            <form action="/phone_number_edit_page" method="POST">
+                <input type="hidden" name="send_code" value="True">
+                <input type="text" placeholder="Enter new number" name="new_phone_number" required> 
+                <button type="submit">change</button>
+            </form>
+
+        {% else %}
+            <form action="/phone_number_edit_page" method="POST">
+                <input type="text" placeholder="{{ phone_number_check }}" name="new_phone_number" required> 
+                <button type="submit">change</button>
+            </form>
+            <!--check if user code is valid-->
+            <form action="/phone_number_edit_page" method="POST">
+                <input type="hidden" name="new_phone_number" value="{{ phone_number_check }}">
+                <input type="text" placeholder="verification code" name="verify_code" required> 
+                <button type="submit">check</button>
+            </form>
+
+            <form action="/phone_number_edit_page" method="POST">
+                <input type="hidden" name="new_phone_number" value="{{ phone_number_check }}">
+                <input type="hidden" name="send_code" value="True">
+                <button type="submit">send code again</button>
+            </form>
+    </div>
+        {% endif %}
+
+{% endblock %}

@@ -1,4 +1,4 @@
-def create_session_for_user(user_id, session_id, expiry_time):
+def create_session_for_user(user_id, session_id, expiry_time, verified=True):
     from backend.db_conn import connect_to_db
     from datetime import datetime, timedelta
 
@@ -7,31 +7,44 @@ def create_session_for_user(user_id, session_id, expiry_time):
     cursor = conn.cursor()
     
     expiry = datetime.now() + timedelta(minutes=expiry_time)
-    
-    cursor.execute("""
-        INSERT INTO sessions (session_id, user_id, expiry) 
-        VALUES (%s, %s, %s)
-        ON CONFLICT (session_id) 
-        DO UPDATE SET 
-            user_id = EXCLUDED.user_id,
-            expiry = EXCLUDED.expiry
-    """, (session_id, user_id, expiry))
-    
+    if verified:
+        cursor.execute("""
+            INSERT INTO sessions (session_id, user_id, expiry) 
+            VALUES (%s, %s, %s)
+            ON CONFLICT (session_id) 
+            DO UPDATE SET 
+                user_id = EXCLUDED.user_id,
+                expiry = EXCLUDED.expiry
+        """, (session_id, user_id, expiry))
+
+    else:
+        cursor.execute("""
+            INSERT INTO unverified_sessions (session_id, user_id, expiry) 
+            VALUES (%s, %s, %s)
+            ON CONFLICT (session_id) 
+            DO UPDATE SET 
+                user_id = EXCLUDED.user_id,
+                expiry = EXCLUDED.expiry
+        """, (session_id, user_id, expiry))
+        
     conn.commit()
     conn.close()
     return session_id
 
-def get_user_id_from_session(session_id):
+def get_user_id_from_session(session_id, verified=True):
     from backend.db_conn import connect_to_db
     from datetime import datetime
 
 
     conn = connect_to_db()
     cursor = conn.cursor()
-    
-    cursor.execute("SELECT user_id FROM sessions WHERE session_id = %s AND expiry > %s", 
-                  (session_id, datetime.now()))
-    
+    if verified:
+        cursor.execute("SELECT user_id FROM sessions WHERE session_id = %s AND expiry > %s", 
+                    (session_id, datetime.now()))
+    else:
+        cursor.execute("SELECT user_id FROM unverified_sessions WHERE session_id = %s AND expiry > %s", 
+                    (session_id, datetime.now()))  
+        
     result = cursor.fetchone()
     conn.close()
     
@@ -40,19 +53,24 @@ def get_user_id_from_session(session_id):
     return None
 
 #delete session for user
-def rem_session_from_db(user_id):
+def rem_session_from_db(user_id, verified=True):
     try:
         from backend.db_conn import connect_to_db
 
 
         conn=connect_to_db()
         cursor=conn.cursor()
-
-        #query to remove the users info from the sessions table
-        cursor.execute("""
-            DELETE FROM sessions WHERE user_id = %s
-            """,(user_id,))
-        
+        if verified:
+            #query to remove the users info from the sessions table
+            cursor.execute("""
+                DELETE FROM sessions WHERE user_id = %s
+                """,(user_id,))
+        else:
+            #query to remove the users info from the sessions table
+            cursor.execute("""
+                DELETE FROM unverified_sessions WHERE user_id = %s
+                """,(user_id,))
+            
         conn.commit()
 
         # Check if any row was deleted

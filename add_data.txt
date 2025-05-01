@@ -1,5 +1,0 @@
-INSERT INTO users(username, password, phone_number, email_address, school_id, created_date)
-VALUES ('ferlando', 'goatpiece', '7867975531', 'ferlandosimilien0@gmail.com', 2, '2025-04-11');
-
-INSERT INTO users(username, password, phone_number, email_address, school_id, created_date)
-VALUES ('wendy', 'goatpiece', '7866553315', 'urboywendy13@gmail.com', 1, '2025-04-11');

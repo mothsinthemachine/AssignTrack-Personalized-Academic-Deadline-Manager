@@ -7,3 +7,4 @@ twilio==9.5.0
 gunicorn==21.2.0
 psycopg2-binary==2.9.9
 flask_bcrypt==1.0.1
+cryptography==44.0.2

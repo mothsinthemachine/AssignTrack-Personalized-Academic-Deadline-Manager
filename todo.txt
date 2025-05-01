@@ -1,23 +1,30 @@
-#crazy idea-add a feature to connect to people with similar assighnments
+#crazy idea-add a feature to look at prev submitted assighnments giving it to an ai that changes the file around to stop plagirism
+then give it to other users with their assighnment
 
-#make sure when adding tokens they have a value
-#check if password in logs
+##much much much later
+#go through prints so no sensitive information is logged
 
+
+#check on much much later
 ##can edit token even when cookie has expired-needs to be fixed
 
 
+#much later
+##add the amount of attempts a user had and the time for the verification code to be useable
 
-#add the ability for the user to reset password after verification ofc
+#later
+check all redirect in app.py to make sure im not sending sensitive information through GET
 
-                      
+#tmrw
+#add a part to the database that stores last sent notification making sure to get datetime 
+now for 10 min knowing its expired and add all this in queries
 
-#get someone whos good at css and javascript
 
-#todo
-do chores
+#tmrw
+before publicising code c check security measures
 
-#today
-make sure to add an error for token and school
-saving data as hashing
-adjust ferlando and wendy info as hash
-add the error for token and school like this Token: please make sure you have the correct school and token
+##to_do
+-add an error page that tells the user info has already been taken unverified_to_verified_user
+-add a function that automatically deleted old pending users 
+
+#errors when saving users show on page 

@@ -1,5 +1,4 @@
 -- PostgreSQL version of your schema
-
 CREATE TABLE schools(
     id SERIAL PRIMARY KEY,
     name TEXT UNIQUE,
@@ -18,12 +17,31 @@ CREATE TABLE users(
     FOREIGN KEY (school_id) REFERENCES schools(id)
 );
 
+CREATE TABLE pending_users(
+    id SERIAL PRIMARY KEY,
+    username TEXT UNIQUE,
+    password TEXT,
+    phone_number TEXT UNIQUE,
+    email_address TEXT UNIQUE,
+    school_id INTEGER,
+    created_date TEXT,
+    FOREIGN KEY (school_id) REFERENCES schools(id)
+);
+
 CREATE TABLE sessions(
     id SERIAL PRIMARY KEY,
     user_id INTEGER,
     session_id TEXT UNIQUE,
     expiry TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+CREATE TABLE unverified_sessions(
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER,
+    session_id TEXT UNIQUE,
+    expiry TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES pending_users(id)
 );
 
 CREATE TABLE reminders(
@@ -92,12 +110,27 @@ CREATE TABLE password_log(
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
+CREATE TABLE sent_verifications(
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER UNIQUE,
+    email BOOLEAN,
+    sms BOOLEAN,
+    "email_time_sent" TIMESTAMP,
+    "sms_time_sent" TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
 -- Indexes to help speed up commonly queried columns
 CREATE INDEX school_search 
 ON schools(name, canvas_link, address);
 
+CREATE INDEX sent_verifications_search
+ON sent_verifications(email, sms, email_time_sent, sms_time_sent)
+
 CREATE INDEX reminder_search
 ON reminders(days_ahead, special);
+
+CREATE INDEX pending_user_search
+ON pending_users(username, password, phone_number, email_address, created_date);
 
 CREATE INDEX user_search
 ON users(username, password, phone_number, email_address, created_date);
@@ -193,6 +226,39 @@ CREATE TRIGGER reminder_schedule_trigger
 AFTER INSERT ON users
 FOR EACH ROW
 EXECUTE FUNCTION create_reminder_schedule();
+
+CREATE OR REPLACE PROCEDURE promote_pending_user(pending_id INT)
+LANGUAGE plpgsql
+AS $$
+DECLARE 
+    p_record RECORD;
+BEGIN
+    -- Get the pending user
+    SELECT * INTO p_record
+    FROM pending_users
+    WHERE id = pending_id;
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Pending user with id % not found.', pending_id;
+    END IF;
+    
+    -- Try to insert into users table without using savepoints
+    -- Just use a simple try-catch block
+    BEGIN
+        INSERT INTO users(username, password, phone_number, email_address, school_id, created_date)
+        VALUES (p_record.username, p_record.password, p_record.phone_number, p_record.email_address, p_record.school_id, p_record.created_date);
+    EXCEPTION
+        WHEN unique_violation THEN
+            -- Delete the pending user since verification attempt failed
+            DELETE FROM pending_users WHERE id = pending_id;
+            RAISE EXCEPTION 'Verification expired: A user with this information already exists. Please create a new account.';
+    END;
+
+    -- Delete from pending users table if insert was successful
+    DELETE FROM pending_users WHERE id = pending_id;
+END;
+$$;
+
 
 -- Insert schools
 INSERT INTO schools(id, name, canvas_link, address)

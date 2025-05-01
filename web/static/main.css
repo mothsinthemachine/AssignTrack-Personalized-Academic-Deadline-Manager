@@ -175,6 +175,18 @@ button:hover {
     background-color: #4A90E2;
 }
 
+.add-form {
+    position: relative; 
+    z-index: 1000;      
+    pointer-events: auto;
+  }
+
+.edit-form {
+    position: relative; 
+    z-index: 1000;      
+    pointer-events: auto;
+  }
+
 label {
     cursor: pointer;
     font-size: 16px;

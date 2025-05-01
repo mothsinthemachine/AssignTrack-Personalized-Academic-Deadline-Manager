@@ -25,30 +25,49 @@
                 <!--email object-->
                 <div class="email">
                     <p>Email:</p>
-                    <form action="/edit_email_redirect" method="POST">
-                        <input type="hidden" name="user_id" value="{{ user.id }}">
-                        <input type="text" placeholder="{{ user.email_address }}" name="new_email_address" required> 
+                    {% if invalid_email %}
+                        <p style="font-size: 0.9em; margin: 0.5em 0;">{{ invalid_email }}</p>
+                    {% endif %}
+                    <p>{{ user.email_address }}</p>
+                    <form action="/email_edit_page" method="POST">
+                        
                         <button type="submit">Edit</button>
                     </form>
-                </div>
 
-                <!--phone number object-->
-                <div class="phone_number">
-                    <p>Phone Number:</p>
-                    <form action="/edit_phone_number_redirect" method="POST">
-                        <input type="hidden" name="user_id" value="{{ user.id }}">
-                        <input type="text" placeholder="......{{ user.phone_number[-4:] }}" name="new_phone_number" required> 
-                        <button type="submit">Edit</button>
-                    </form>
                 </div>
+                {% if user.phone_number %}
+                    <!--phone number object-->
+                    <div class="phone_number">
+                        <p>Phone Number:</p>
+                        <p>...{{ user.phone_number[-4:] }}</p>
+                        <form action="/phone_number_edit_page" method="POST">
+                            
+                            <button type="submit">Edit</button>
+                        </form>
+                    </div>
+                {% else %}
+                    <!--phone number object-->
+                    <div class="phone_number">
+                        <p>Phone Number:</p>
+                        <p>No Number</p>
+                        <form action="/phone_number_edit_page" method="POST">
+                            
+                            <button type="submit">Add</button>
+                        </form>
+                    </div>
+                {% endif %}
+
                 <div class="token">
                     <p>Token:</p>
+                    {% if invalid_token %}
+                    <p style="font-size: 0.9em; margin: 0.5em 0;">{{ invalid_token[25:] }}</p>
+                    {% endif %}
                     {% if has_token %}
                     <!-- The form to edit the token -->
                     <div class="edit-form">
                         <form action="/edit_token_redirect" method="POST">
                             <!--form information the user wont see-->
-                            <input type="hidden" name="user_id" value="{{ user.id }}">
+                            
                             <input type="hidden" name="school_id" value="{{ user.school_id }}">
 
                             <!--form information if user wants to edit the token-->
@@ -59,7 +78,7 @@
                     
                         <!--Delete button for token-->
                         <form action="/remove_token_redirect" method="POST">
-                            <input type="hidden" name="user_id" value="{{ user.id }}">
+                            
                             <button class="tokken-delete">Delete</button>
                         </form>
                     </div>
@@ -68,9 +87,7 @@
                         <div class="add-form">
                             <form action="/add_token_redirect" method="POST">
                                 <!--form information the user wont see-->
-                                <input type="hidden" name="user_id" value="{{ user.id }}">
                                 <input type="hidden" name="school_id" value="{{ user.school_id }}">
-
                                 <!--form information so user can add token-->
                                 <input type="text" id="newToken" name="newToken" placeholder="token">
                                 <button type="submit">Add</button>
@@ -86,7 +103,7 @@
                 <!--allow the user to choose their school-->
                 <div class="choose_school">
                     <form action="/choose_school_redirect" method="POST" >
-                        <input type="hidden" name="user_id" value="{{ user.id }}">
+                        
                         <p>School:</p>
                             <select class="school_names" id="school_dropdown" name="schools" onchange="this.form.submit()">
                                 <option value="fiu" {% if selected_school == 'fiu' %}selected{% endif %}>{{ school_names[0] }}</option>
@@ -98,7 +115,7 @@
                 <!--allow the user to choose their reminder time-->
                 <div class="choose_schedule">
                     <form action="/choose_schedule_redirect" method="POST" >
-                        <input type="hidden" name="user_id" value="{{ user.id }}">
+                        
                         <p>schedule:</p>
                         <!--Hours dropdown for reminder schedule-->
                             <select class="hours" id="hours_dropdown" name="hours" onchange="this.form.submit()">
@@ -161,7 +178,7 @@
                         <p>Notification Preference:</p>
                     </div>
                     <form method="POST" action="/noti_preference_redirect" id="notiForm">
-                        <input type="hidden" name="user_id" value="{{ user.id }}">
+                        
                         
                         <input type="checkbox" id="option1" name="Text" value="1"
                             {% if noti_preference.phone_preference %}checked{% endif %}
@@ -182,7 +199,7 @@
             <!--Logout button-->
             <div class="logout">
                 <form action="/logout" method="POST">
-                    <input type="hidden" name="user_id" value="{{ user.id }}">
+                    
                     <button class="logout">Logout</button>
                 </form>
             </div>
@@ -198,7 +215,7 @@
                 {% if check_reminders_dict.first_reminder_key %}
                     <form action="/edit_reminder_redirect" method="POST">
                         <input type='hidden' name="reminder_number" value="1">
-                        <input type="hidden" name="user_id" value="{{ user.id }}">
+                        
                         <p>Reminder 1:</p>
                         <input type="text" name="daysAhead" placeholder="{{ check_reminders_dict['first_reminder_key'] }}" step='1' required>
                         <button type="submit">Edit</button>
@@ -206,13 +223,13 @@
 
                     <!--Delete button for reminder-->
                     <form action="/remove_reminder_redirect" method="POST">
-                        <input type="hidden" name="user_id" value="{{ user.id }}">
+                        
                         <input type="hidden" name="reminder_number" value="1">
                         <button>Delete</button>
                     </form>
                 {% else %}
                         <form action="/add_reminder_redirect" method="POST">
-                            <input type="hidden" name="user_id" value="{{ user.id }}">
+                            
                             <p>Reminder 1:</p>
                             <input type="text" name="first_reminder" placeholder="Add days ahead">
                             <button type="submit">Add</button>
@@ -223,7 +240,7 @@
                 {% if check_reminders_dict.second_reminder_key %}
                     <form action="/edit_reminder_redirect" method="POST">
                         <input type='hidden' name="reminder_number" value="2">
-                        <input type="hidden" name="user_id" value="{{ user.id }}">
+                        
                         <p>Reminder 2:</p>
                         <input type="text" name="daysAhead" placeholder="{{ check_reminders_dict['second_reminder_key'] }}" step='1' required>
                         <button type="submit">Edit</button>
@@ -231,13 +248,13 @@
 
                     <!--Delete button for reminder-->
                     <form action="/remove_reminder_redirect" method="POST">
-                        <input type="hidden" name="user_id" value="{{ user.id }}">
+                        
                         <input type="hidden" name="reminder_number" value="2">
                         <button>Delete</button>
                     </form>
                 {% else %}
                     <form action="/add_reminder_redirect" method="POST">
-                        <input type="hidden" name="user_id" value="{{ user.id }}">
+                        
                         <p>Reminder 2:</p>
                         <input type="text" name="second_reminder" placeholder="Add days ahead">
                         <button type="submit">Add</button>
@@ -248,7 +265,7 @@
                 {% if check_reminders_dict.third_reminder_key %}
                     <form action="/edit_reminder_redirect" method="POST">
                         <input type='hidden' name="reminder_number" value="3">
-                        <input type="hidden" name="user_id" value="{{ user.id }}">
+                        
                         <p>Reminder 1:</p>
                         <input type="text" name="daysAhead" placeholder="{{ check_reminders_dict['third_reminder_key'] }}" step='1' required>
                         <button type="submit">Edit</button>
@@ -256,13 +273,13 @@
 
                     <!--Delete button for reminder-->
                     <form action="/remove_reminder_redirect" method="POST">
-                        <input type="hidden" name="user_id" value="{{ user.id }}">
+                        
                         <input type="hidden" name="reminder_number" value="3">
                         <button>Delete</button>
                     </form>
                 {% else %}
                     <form action="/add_reminder_redirect" method="POST">
-                        <input type="hidden" name="user_id" value="{{ user.id }}">
+                        
                         <p>Reminder 3:</p>
                         <input type="text" name="third_reminder" placeholder="Add days ahead">
                         <button type="submit">Add</button>
@@ -276,7 +293,7 @@
                 </div>
                 {% if check_reminders_dict.special_reminder_key %}
                     <form action="/edit_reminder_redirect" method="POST">
-                        <input type="hidden" name="user_id" value="{{ user.id }}">
+                        
                         <input type="hidden" name="reminder_number" value="4">
                         <input type="text" name="daysAhead" placeholder="{{ check_reminders_dict.special_reminder_key }}" step='1' required>
                         <button type="submit">Edit</button>
@@ -285,12 +302,12 @@
                     <!--Delete button for reminder-->
                     <form action="/remove_reminder_redirect" method="POST">
                         <input type="hidden" name="reminder_number" value="4">
-                        <input type="hidden" name="user_id" value="{{ user.id }}">
+                        
                         <button>Delete</button>
                     </form>
                 {% else %}
                 <form action="/add_reminder_redirect" method="POST">
-                    <input type="hidden" name="user_id" value="{{ user.id }}">
+                    
                     <input type="text" name="special_reminder" placeholder="Add days ahead">
                     <button type="submit">Add</button>
                 </form>

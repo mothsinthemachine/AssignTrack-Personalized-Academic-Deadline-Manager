@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% block head %}
+{% endblock %}
+
+{% block body %}
+    <!--email object-->
+    <div class="email_change">
+        <!--title for email-->
+        <p>Email:</p>
+        {% if email_check is none %}
+            <form action="/email_edit_page" method="POST">
+                <input type="hidden" name="send_code" value="True">
+                <input type="text" placeholder="Enter new Email" name="new_email" required> 
+                <button type="submit">change</button>
+            </form>
+        {% elif "Invalid" in email_check %}
+            <!--shows error message if useer puts an incorrect email-->
+            <p style="font-size: 0.9em; margin: 0.5em 0;">{{ email_check }}</p>
+            <form action="/email_edit_page" method="POST">
+                <input type="hidden" name="send_code" value="True">
+                <input type="text" placeholder="Enter new Email" name="new_email" required> 
+                <button type="submit">change</button>
+            </form>
+
+        {% else %}
+            <form action="/email_edit_page" method="POST">
+                
+                <input type="text" placeholder="{{ email_check }}" name="new_email" required> 
+                <button type="submit">change</button>
+            </form>
+            <!--check if user code is valid-->
+            <form action="/email_edit_page" method="POST">
+                <input type="hidden" name="new_email" value="{{ email_check }}">
+                <input type="text" placeholder="verification code" name="verify_code" required> 
+                <button type="submit">check</button>
+            </form>
+
+            <form action="/email_edit_page" method="POST">
+                
+                <input type="hidden" name="new_email" value="{{ email_check }}">
+                <input type="hidden" name="send_code" value="True">
+                <button type="submit">send code again</button>
+            </form>
+    </div>
+        {% endif %}
+
+{% endblock %}
